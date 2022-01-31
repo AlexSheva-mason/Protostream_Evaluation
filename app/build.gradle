@@ -70,3 +70,11 @@ dependencies {
     implementation "io.coil-kt:coil-compose:1.4.0"
 
 }
+
+tasks.withType(org.jetbrains.kotlin.gradle.tasks.KotlinCompile).all {
+    kotlinOptions {
+        freeCompilerArgs += [
+                '-Xopt-in=kotlin.RequiresOptIn',
+        ]
+    }
+}
