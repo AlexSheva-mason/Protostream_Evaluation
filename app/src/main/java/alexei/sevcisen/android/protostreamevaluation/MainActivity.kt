@@ -1,11 +1,13 @@
 package alexei.sevcisen.android.protostreamevaluation
 
 import alexei.sevcisen.android.protostreamevaluation.ui.theme.ProtostreamEvaluationTheme
+import android.content.Context
 import android.os.Bundle
 import android.widget.Toast
 import androidx.activity.ComponentActivity
 import androidx.activity.compose.setContent
 import androidx.compose.foundation.layout.*
+import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.text.KeyboardActions
 import androidx.compose.foundation.text.KeyboardOptions
 import androidx.compose.material.Button
@@ -28,6 +30,9 @@ import androidx.navigation.NavController
 import androidx.navigation.compose.NavHost
 import androidx.navigation.compose.composable
 import androidx.navigation.compose.rememberNavController
+import kotlinx.coroutines.launch
+import retrofit2.HttpException
+import java.io.IOException
 
 const val LOGIN_SCREEN_ID = "login_screen"
 const val MAIN_LIST_SCREEN_ID = "main_list_screen"
@@ -88,7 +93,9 @@ fun LoginScreen(navController: NavController?) {
                     Toast.makeText(context, "Email or password is invalid", Toast.LENGTH_LONG)
                         .show()
                 } else {
-                    navController?.navigate(MAIN_LIST_SCREEN_ID)
+                    navController?.navigate(MAIN_LIST_SCREEN_ID) {
+                        popUpTo(LOGIN_SCREEN_ID) { inclusive = true }
+                    }
                 }
             }) {
             Text(text = "Sign in")
@@ -103,7 +110,26 @@ fun MainListScreen(navController: NavController?) {
         verticalArrangement = Arrangement.Center,
         horizontalAlignment = Alignment.CenterHorizontally
     ) {
-        Text("This is main screen")
+        val composableScope = rememberCoroutineScope()
+        val context = LocalContext.current
+        var movieData by remember { mutableStateOf(listOf<Movie>()) }
+        composableScope.launch {
+            try {
+                val movies = RetrofitServiceProvider.apiService.getMovieData()
+                movieData = movies
+            } catch (ex: HttpException) {
+                showErrorToast(ex, context)
+            } catch (ex: IOException) {
+                showErrorToast(ex, context)
+            }
+        }
+        LazyColumn {
+            movieData.forEach {
+                item {
+                    Text(text = it.title)
+                }
+            }
+        }
     }
 }
 
@@ -123,4 +149,12 @@ private fun evaluateEmailAndPassword(email: String, password: String): Boolean {
         return false
     }
     return (email.contains('@') && email.contains('.') && email.length > 5)
+}
+
+private fun showErrorToast(exception: Exception, context: Context) {
+    Toast.makeText(
+        context,
+        "Error occurred while fetching data from api: $exception",
+        Toast.LENGTH_LONG
+    ).show()
 }
