@@ -6,7 +6,7 @@ data class Movie(
     val description: String,
     val duration: String,
     val releaseDate: String,
-    val images: List<ImageUrl>
+    val images: List<ImageUrl>?
 )
 
 data class ImageUrl(
