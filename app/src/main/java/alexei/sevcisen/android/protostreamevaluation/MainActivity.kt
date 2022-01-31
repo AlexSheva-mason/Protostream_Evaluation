@@ -2,6 +2,7 @@ package alexei.sevcisen.android.protostreamevaluation
 
 import alexei.sevcisen.android.protostreamevaluation.ui.theme.ProtostreamEvaluationTheme
 import android.os.Bundle
+import android.widget.Toast
 import androidx.activity.ComponentActivity
 import androidx.activity.compose.setContent
 import androidx.compose.foundation.layout.*
@@ -15,6 +16,7 @@ import androidx.compose.ui.Alignment
 import androidx.compose.ui.ExperimentalComposeUiApi
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.focus.FocusDirection
+import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.platform.LocalFocusManager
 import androidx.compose.ui.platform.LocalSoftwareKeyboardController
 import androidx.compose.ui.text.input.ImeAction
@@ -27,15 +29,18 @@ import androidx.navigation.compose.NavHost
 import androidx.navigation.compose.composable
 import androidx.navigation.compose.rememberNavController
 
+const val LOGIN_SCREEN_ID = "login_screen"
+const val MAIN_LIST_SCREEN_ID = "main_list_screen"
+
 class MainActivity : ComponentActivity() {
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
         setContent {
             ProtostreamEvaluationTheme {
                 val navController = rememberNavController()
-                NavHost(navController = navController, startDestination = "login_screen") {
-                    composable("login_screen") { LoginScreen(navController = navController) }
-                    composable("main_list_screen") { MainListScreen(navController = navController) }
+                NavHost(navController = navController, startDestination = LOGIN_SCREEN_ID) {
+                    composable(LOGIN_SCREEN_ID) { LoginScreen(navController = navController) }
+                    composable(MAIN_LIST_SCREEN_ID) { MainListScreen(navController = navController) }
                 }
             }
         }
@@ -49,6 +54,7 @@ fun LoginScreen(navController: NavController?) {
     var password by remember { mutableStateOf("") }
     val localFocusManager = LocalFocusManager.current
     val keyboardController = LocalSoftwareKeyboardController.current
+    val context = LocalContext.current
     Column(
         modifier = Modifier.fillMaxSize(),
         verticalArrangement = Arrangement.Center,
@@ -76,15 +82,29 @@ fun LoginScreen(navController: NavController?) {
         Spacer(modifier = Modifier.height(32.dp))
         Button(
             modifier = Modifier.padding(10.dp),
-            onClick = { /*TODO*/ }) {
-            Text(text = "Login")
+            onClick = {
+                val credentialsValid = evaluateEmailAndPassword(email, password)
+                if (!credentialsValid) {
+                    Toast.makeText(context, "Email or password is invalid", Toast.LENGTH_LONG)
+                        .show()
+                } else {
+                    navController?.navigate(MAIN_LIST_SCREEN_ID)
+                }
+            }) {
+            Text(text = "Sign in")
         }
     }
 }
 
 @Composable
 fun MainListScreen(navController: NavController?) {
-
+    Column(
+        modifier = Modifier.fillMaxSize(),
+        verticalArrangement = Arrangement.Center,
+        horizontalAlignment = Alignment.CenterHorizontally
+    ) {
+        Text("This is main screen")
+    }
 }
 
 @Preview(
@@ -96,4 +116,11 @@ fun LoginScreenPreview() {
     ProtostreamEvaluationTheme {
         LoginScreen(null)
     }
+}
+
+private fun evaluateEmailAndPassword(email: String, password: String): Boolean {
+    if (email.isBlank() || password.isBlank()) {
+        return false
+    }
+    return (email.contains('@') && email.contains('.') && email.length > 5)
 }
