@@ -8,11 +8,13 @@ import androidx.activity.ComponentActivity
 import androidx.activity.compose.setContent
 import androidx.compose.animation.AnimatedVisibility
 import androidx.compose.animation.ExperimentalAnimationApi
+import androidx.compose.foundation.ExperimentalFoundationApi
 import androidx.compose.foundation.Image
 import androidx.compose.foundation.background
 import androidx.compose.foundation.gestures.detectTapGestures
 import androidx.compose.foundation.layout.*
-import androidx.compose.foundation.lazy.LazyColumn
+import androidx.compose.foundation.lazy.GridCells
+import androidx.compose.foundation.lazy.LazyVerticalGrid
 import androidx.compose.foundation.text.KeyboardActions
 import androidx.compose.foundation.text.KeyboardOptions
 import androidx.compose.material.*
@@ -29,14 +31,13 @@ import androidx.compose.ui.platform.LocalSoftwareKeyboardController
 import androidx.compose.ui.text.input.ImeAction
 import androidx.compose.ui.text.input.PasswordVisualTransformation
 import androidx.compose.ui.text.style.TextOverflow
-import androidx.compose.ui.tooling.preview.Devices
-import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
 import androidx.navigation.NavController
 import androidx.navigation.compose.NavHost
 import androidx.navigation.compose.composable
 import androidx.navigation.compose.rememberNavController
 import coil.compose.rememberImagePainter
+import coil.size.OriginalSize
 import kotlinx.coroutines.launch
 import retrofit2.HttpException
 import java.io.IOException
@@ -110,6 +111,7 @@ fun LoginScreen(navController: NavController?) {
     }
 }
 
+@OptIn(ExperimentalFoundationApi::class)
 @Composable
 fun MainListScreen(navController: NavController?) {
     Column(
@@ -130,12 +132,18 @@ fun MainListScreen(navController: NavController?) {
                 showErrorToast(ex, context)
             }
         }
-        LazyColumn {
+        LazyVerticalGrid(
+            cells = GridCells.Fixed(2),
+            contentPadding = PaddingValues(
+                start = 6.dp,
+                top = 12.dp,
+                end = 6.dp,
+                bottom = 12.dp
+            )
+        ) {
             movieData.forEach {
                 item {
                     MovieCardExtendable(it)
-                    Text(text = it.id)
-                    Spacer(modifier = Modifier.height(5.dp))
                 }
             }
         }
@@ -146,12 +154,11 @@ fun MainListScreen(navController: NavController?) {
 @Composable
 fun MovieCardExtendable(movie: Movie) {
     var expanded by remember { mutableStateOf(false) }
-    val cardWidth = if (expanded) 200.dp else 150.dp
-    val imageHeight = if (expanded) 120.dp else 90.dp
     Card(
         elevation = 4.dp,
         modifier = Modifier
-            .width(cardWidth)
+            .fillMaxWidth()
+            .padding(4.dp)
             .pointerInput(Unit) {
                 detectTapGestures(
                     onLongPress = {
@@ -161,15 +168,19 @@ fun MovieCardExtendable(movie: Movie) {
             }
     ) {
         val thumbnailUrl = movie.images?.find { it.type == "thumbnail" }?.url
+        val heroMobileUrl = movie.images?.find { it.type == "hero-mobile" }?.url
+        val imageUrl = if (expanded) heroMobileUrl else thumbnailUrl
         Column(
             verticalArrangement = Arrangement.SpaceBetween
         ) {
             Image(
-                painter = rememberImagePainter("$thumbnailUrl"),
+                painter = rememberImagePainter(data = "$imageUrl",
+                    builder = {
+                        size(OriginalSize)
+                    }),
                 alignment = Alignment.TopCenter,
                 modifier = Modifier
-                    .width(cardWidth)
-                    .height(imageHeight),
+                    .fillMaxWidth(),
                 contentDescription = null
             )
             Text(
@@ -201,17 +212,6 @@ fun MovieCardExtendable(movie: Movie) {
                 )
             }
         }
-    }
-}
-
-@Preview(
-    showBackground = true,
-    device = Devices.PIXEL_4_XL
-)
-@Composable
-fun LoginScreenPreview() {
-    ProtostreamEvaluationTheme {
-        LoginScreen(null)
     }
 }
 
