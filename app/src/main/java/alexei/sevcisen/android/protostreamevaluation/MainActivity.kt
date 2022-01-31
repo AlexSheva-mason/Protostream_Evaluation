@@ -44,6 +44,7 @@ import java.io.IOException
 
 const val LOGIN_SCREEN_ID = "login_screen"
 const val MAIN_LIST_SCREEN_ID = "main_list_screen"
+const val MOVIE_ID_SCREEN_ID = "movie_id_screen"
 
 class MainActivity : ComponentActivity() {
     override fun onCreate(savedInstanceState: Bundle?) {
@@ -54,6 +55,9 @@ class MainActivity : ComponentActivity() {
                 NavHost(navController = navController, startDestination = LOGIN_SCREEN_ID) {
                     composable(LOGIN_SCREEN_ID) { LoginScreen(navController = navController) }
                     composable(MAIN_LIST_SCREEN_ID) { MainListScreen(navController = navController) }
+                    composable("$MOVIE_ID_SCREEN_ID/{movieId}") { backStackEntry ->
+                        MovieIdScreen(id = backStackEntry.arguments?.getString("movieId"))
+                    }
                 }
             }
         }
@@ -143,16 +147,27 @@ fun MainListScreen(navController: NavController?) {
         ) {
             movieData.forEach {
                 item {
-                    MovieCardExtendable(it)
+                    MovieCardExtendable(it, navController)
                 }
             }
         }
     }
 }
 
+@Composable
+fun MovieIdScreen(id: String?) {
+    Column(
+        verticalArrangement = Arrangement.Center,
+        horizontalAlignment = Alignment.CenterHorizontally,
+        modifier = Modifier.fillMaxSize()
+    ) {
+        Text(text = "Movie ID: $id")
+    }
+}
+
 @OptIn(ExperimentalAnimationApi::class)
 @Composable
-fun MovieCardExtendable(movie: Movie) {
+fun MovieCardExtendable(movie: Movie, navController: NavController?) {
     var expanded by remember { mutableStateOf(false) }
     Card(
         elevation = 4.dp,
@@ -163,6 +178,9 @@ fun MovieCardExtendable(movie: Movie) {
                 detectTapGestures(
                     onLongPress = {
                         expanded = !expanded
+                    },
+                    onTap = {
+                        navController?.navigate("$MOVIE_ID_SCREEN_ID/${movie.id}")
                     }
                 )
             }
