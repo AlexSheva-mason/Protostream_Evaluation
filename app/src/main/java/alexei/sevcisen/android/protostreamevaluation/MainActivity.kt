@@ -6,8 +6,11 @@ import android.os.Bundle
 import android.widget.Toast
 import androidx.activity.ComponentActivity
 import androidx.activity.compose.setContent
+import androidx.compose.animation.AnimatedVisibility
+import androidx.compose.animation.ExperimentalAnimationApi
 import androidx.compose.foundation.Image
 import androidx.compose.foundation.background
+import androidx.compose.foundation.gestures.detectTapGestures
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.text.KeyboardActions
@@ -19,6 +22,7 @@ import androidx.compose.ui.ExperimentalComposeUiApi
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.focus.FocusDirection
 import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.input.pointer.pointerInput
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.platform.LocalFocusManager
 import androidx.compose.ui.platform.LocalSoftwareKeyboardController
@@ -138,13 +142,23 @@ fun MainListScreen(navController: NavController?) {
     }
 }
 
+@OptIn(ExperimentalAnimationApi::class)
 @Composable
 fun MovieCardExtendable(movie: Movie) {
+    var expanded by remember { mutableStateOf(false) }
+    val cardWidth = if (expanded) 200.dp else 150.dp
+    val imageHeight = if (expanded) 120.dp else 90.dp
     Card(
         elevation = 4.dp,
         modifier = Modifier
-            .width(150.dp)
-            .height(175.dp)
+            .width(cardWidth)
+            .pointerInput(Unit) {
+                detectTapGestures(
+                    onLongPress = {
+                        expanded = !expanded
+                    }
+                )
+            }
     ) {
         val thumbnailUrl = movie.images?.find { it.type == "thumbnail" }?.url
         Column(
@@ -154,15 +168,15 @@ fun MovieCardExtendable(movie: Movie) {
                 painter = rememberImagePainter("$thumbnailUrl"),
                 alignment = Alignment.TopCenter,
                 modifier = Modifier
-                    .width(150.dp)
-                    .height(90.dp),
+                    .width(cardWidth)
+                    .height(imageHeight),
                 contentDescription = null
             )
             Text(
                 text = movie.title,
                 style = MaterialTheme.typography.body2,
                 overflow = TextOverflow.Ellipsis,
-                maxLines = 3,
+                maxLines = if (expanded) Int.MAX_VALUE else 3,
                 modifier = Modifier.padding(2.dp)
             )
             Text(
@@ -174,6 +188,18 @@ fun MovieCardExtendable(movie: Movie) {
                     .align(Alignment.End)
                     .padding(4.dp)
             )
+            AnimatedVisibility(
+                visible = expanded,
+            ) {
+                Divider()
+                Text(
+                    text = movie.description,
+                    style = MaterialTheme.typography.caption,
+                    overflow = TextOverflow.Ellipsis,
+                    maxLines = if (expanded) Int.MAX_VALUE else 3,
+                    modifier = Modifier.padding(2.dp)
+                )
+            }
         }
     }
 }
