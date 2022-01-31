@@ -6,23 +6,25 @@ import android.os.Bundle
 import android.widget.Toast
 import androidx.activity.ComponentActivity
 import androidx.activity.compose.setContent
+import androidx.compose.foundation.Image
+import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.text.KeyboardActions
 import androidx.compose.foundation.text.KeyboardOptions
-import androidx.compose.material.Button
-import androidx.compose.material.OutlinedTextField
-import androidx.compose.material.Text
+import androidx.compose.material.*
 import androidx.compose.runtime.*
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.ExperimentalComposeUiApi
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.focus.FocusDirection
+import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.platform.LocalFocusManager
 import androidx.compose.ui.platform.LocalSoftwareKeyboardController
 import androidx.compose.ui.text.input.ImeAction
 import androidx.compose.ui.text.input.PasswordVisualTransformation
+import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.tooling.preview.Devices
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
@@ -30,6 +32,7 @@ import androidx.navigation.NavController
 import androidx.navigation.compose.NavHost
 import androidx.navigation.compose.composable
 import androidx.navigation.compose.rememberNavController
+import coil.compose.rememberImagePainter
 import kotlinx.coroutines.launch
 import retrofit2.HttpException
 import java.io.IOException
@@ -126,9 +129,51 @@ fun MainListScreen(navController: NavController?) {
         LazyColumn {
             movieData.forEach {
                 item {
-                    Text(text = it.title)
+                    MovieCardExtendable(it)
+                    Text(text = it.id)
+                    Spacer(modifier = Modifier.height(5.dp))
                 }
             }
+        }
+    }
+}
+
+@Composable
+fun MovieCardExtendable(movie: Movie) {
+    Card(
+        elevation = 4.dp,
+        modifier = Modifier
+            .width(150.dp)
+            .height(175.dp)
+    ) {
+        val thumbnailUrl = movie.images?.find { it.type == "thumbnail" }?.url
+        Column(
+            verticalArrangement = Arrangement.SpaceBetween
+        ) {
+            Image(
+                painter = rememberImagePainter("$thumbnailUrl"),
+                alignment = Alignment.TopCenter,
+                modifier = Modifier
+                    .width(150.dp)
+                    .height(90.dp),
+                contentDescription = null
+            )
+            Text(
+                text = movie.title,
+                style = MaterialTheme.typography.body2,
+                overflow = TextOverflow.Ellipsis,
+                maxLines = 3,
+                modifier = Modifier.padding(2.dp)
+            )
+            Text(
+                text = movie.duration,
+                style = MaterialTheme.typography.body2,
+                color = Color.White,
+                modifier = Modifier
+                    .background(Color.Black.copy(alpha = 0.7f))
+                    .align(Alignment.End)
+                    .padding(4.dp)
+            )
         }
     }
 }
